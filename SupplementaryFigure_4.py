@@ -7,13 +7,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from statannot import add_stat_annotation
-
 from methylation_severity import (get_dict_deg_dmp_overlap_markers,
                                   get_dict_palette, get_dict_pos,
                                   get_dictionary_methyl_pvalsig,
                                   get_drop_samples, get_xticklabels, main,
                                   make_dataframe_stat_test)
+from statannot import add_stat_annotation
 
 # %%
 path_sev_info = "/BiO/Access/kyungwhan1998/Infectomics/Results/9_clinical/Infectomics_Severity_Information_Methyl_20240102.tsv"
@@ -55,16 +54,16 @@ for marker, markers in dict_markers_overlap.items():
 list_id = list(df_beta_selec_all.index)
 df_beta_selec_target = df_beta_selec_all.loc[list_id, :]
 df_methyl_stat = make_dataframe_stat_test(df_beta_selec_target, list_target_methyl)
-# df_methyl_stat_melted = save_stat_test_result(df_methyl_stat, outdir, "SupplementaryTable4.txt", omics="rna")
+# df_methyl_stat_melted = save_stat_test_result(df_methyl_stat, outdir, "SupplementaryTable4.txt")
 dict_methyl_pvalsig = get_dictionary_methyl_pvalsig(df_methyl_stat)
 
 # %%
 plt.rcParams["font.size"] = 10
 colsev = "Severity_visit"
 colsample = "Sample_ID"
-nrows = 5
+nrows = 7
 ncols = int(np.ceil(len(list_target_methyl) / nrows))
-fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(8*ncols, 6*nrows))
+fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(6*ncols, 8*nrows))
 axes = axes.flatten()
 
 dict_pos = get_dict_pos(df_beta_selec_target, list_pos=[0, 1, 2, 3, 4, 5])
@@ -143,8 +142,8 @@ for i, (marker, ax) in enumerate(zip(list_target_methyl, axes)):
     ax.grid(axis="y")
     ax.set_axisbelow(True)
 
-plt.subplots_adjust(hspace=0.8, wspace=0.2, left=0.1, right=0.9)
-plt.savefig("/BiO/Access/kyungwhan1998/Infectomics/Results/InfectomicsPaper1/20240906/SupplementaryFigure4.png", bbox_inches="tight", dpi=600)
+plt.subplots_adjust(hspace=0.8, wspace=0.3, left=0.1, right=0.9)
+plt.savefig("/BiO/Access/kyungwhan1998/Infectomics/Results/InfectomicsPaper1/20240906/SupplementaryFigure4.pdf", bbox_inches="tight", dpi=300)
 plt.show()
 plt.close()
 

@@ -7,13 +7,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from statannot import add_stat_annotation
-
 from methylation_severity import (get_dict_deg_dmp_overlap_markers,
                                   get_dict_palette, get_dict_pos,
                                   get_dictionary_methyl_pvalsig,
                                   get_drop_samples, get_xticklabels, main,
                                   make_dataframe_stat_test)
+from statannot import add_stat_annotation
 
 # %%
 path_sev_info = "/BiO/Access/kyungwhan1998/Infectomics/Results/9_clinical/Infectomics_Severity_Information_Methyl_20240102.tsv"
@@ -145,7 +144,7 @@ for i, (marker, ax) in enumerate(zip(list_target_methyl, axes)):
     ax.set_axisbelow(True)
 
 plt.subplots_adjust(hspace=0.5, wspace=0.4, left=0.1, right=0.9)
-plt.savefig("/BiO/Access/kyungwhan1998/Infectomics/Results/InfectomicsPaper1/20240906/SupplementaryFigure2.png", bbox_inches="tight", dpi=600)
+plt.savefig("/BiO/Access/kyungwhan1998/Infectomics/Results/InfectomicsPaper1/20240906/SupplementaryFigure2.pdf", bbox_inches="tight", dpi=300)
 plt.show()
 plt.close()
 

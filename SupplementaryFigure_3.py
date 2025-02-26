@@ -5,11 +5,10 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from statannot import add_stat_annotation
-
 from rna_severity import (get_dict_palette, get_dict_pos,
                           get_dictionary_gene_pvalsig, get_xticklabels, main,
-                          make_dataframe_stat_test_rna, save_stat_test_result)
+                          make_dataframe_stat_test_rna)
+from statannot import add_stat_annotation
 
 # %%
 col_id = "ID"
@@ -38,12 +37,12 @@ list_sev = sorted(df_rna_count_meta[colsev].unique())
 order = list_sev[1:] + [list_sev[0]]
 
 df_gene_diffexp_sorted = make_dataframe_stat_test_rna(df_rna_count_meta, list_targeted_gene)
-df_gene_diffexp_sorted_melted = save_stat_test_result(df_gene_diffexp_sorted, outdir, "SupplementaryTable3.txt", omics="rna")
+# df_gene_diffexp_sorted_melted = save_stat_test_result_rna(df_gene_diffexp_sorted, outdir, "SupplementaryTable3.txt")
 dict_gene_pvalsig = get_dictionary_gene_pvalsig(df_gene_diffexp_sorted)
 
 # %%
 plt.rcParams["font.size"] = 10
-nrows = 2
+nrows = 3
 ncols = int(np.ceil(len(list_targeted_gene) / nrows))
 fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(3*ncols, 4*nrows))
 axes = axes.flatten()
@@ -84,10 +83,10 @@ for i, (gene, ax) in enumerate(zip(list_targeted_gene, axes)):
     ax.spines[['right', 'top']].set_visible(False)
     ax.set_xticks(positions)
     list_xticklabels = get_xticklabels(df_rna_count_meta_copy)
-    ax.set_xticklabels(list_xticklabels, fontsize=plt.rcParams["font.size"]-3)
-    ax.tick_params(axis='y', labelsize=plt.rcParams["font.size"])
-    ax.set_ylabel("Expression", fontsize=plt.rcParams["font.size"]+2)
-    ax.set_title(f"$\it{gene.split('_')[1]}$", fontsize=plt.rcParams["font.size"]+4)
+    ax.set_xticklabels(list_xticklabels, fontsize=plt.rcParams["font.size"]+2)
+    ax.tick_params(axis='y', labelsize=plt.rcParams["font.size"]+2)
+    ax.set_ylabel("Expression", fontsize=plt.rcParams["font.size"]+3)
+    ax.set_title(f"$\it{gene.split('_')[1]}$", fontsize=plt.rcParams["font.size"]+6)
     ax.grid(axis="y")
     ax.set_axisbelow(True)
 
@@ -97,16 +96,16 @@ legend_elements = [
     mpatches.Patch(color='royalblue', label='Convalescent')
 ]
 
-plt.legend(handles=legend_elements, 
+axes[-1].legend(handles=legend_elements, 
            loc='center',
-           bbox_to_anchor=(2.2, 1.0),
+           bbox_to_anchor=(2.0, 2.0),
            title="Groups", 
            fontsize=plt.rcParams["font.size"]+4, 
            title_fontsize=plt.rcParams["font.size"]+6,
            frameon=False)
 
-plt.subplots_adjust(hspace=0.3, wspace=0.6, left=0.1, right=0.8)
-plt.savefig("/BiO/Access/kyungwhan1998/Infectomics/Results/InfectomicsPaper1/20240906/SupplementaryFigure3.png", bbox_inches="tight", dpi=600)
+plt.subplots_adjust(hspace=0.5, wspace=0.6, left=0.1, right=0.8)
+plt.savefig("/BiO/Access/kyungwhan1998/Infectomics/Results/InfectomicsPaper1/20240906/SupplementaryFigure3.pdf", bbox_inches="tight", dpi=300)
 plt.show()
 plt.close()
 

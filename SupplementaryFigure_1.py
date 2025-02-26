@@ -2,12 +2,11 @@
 import os
 import warnings
 
+import clinical
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-
-import clinical
 
 warnings.filterwarnings("ignore")
 
@@ -100,7 +99,7 @@ for var_clin, df_compare in zip(list_clin_name, list_df_compare):
         i += 1
 
 plt.subplots_adjust(hspace=0.3, wspace=0.8)
-plt.savefig(f"{outdir}/SupplementaryFigure1.png", bbox_inches="tight", dpi=600)
+plt.savefig(f"{outdir}/SupplementaryFigure1.pdf", bbox_inches="tight", dpi=300)
 plt.show()
 plt.close()
 

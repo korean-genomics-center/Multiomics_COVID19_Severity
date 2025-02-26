@@ -5,11 +5,11 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from statannot import add_stat_annotation
-
 from rna_severity import (get_dict_palette, get_dict_pos,
                           get_dictionary_gene_pvalsig, get_xticklabels, main,
-                          make_dataframe_stat_test_rna, save_stat_test_result)
+                          make_dataframe_stat_test_rna,
+                          save_stat_test_result_rna)
+from statannot import add_stat_annotation
 
 # %%
 col_id = "ID"
@@ -34,7 +34,7 @@ list_sev = sorted(df_rna_count_meta[colsev].unique(), key=lambda x: x.split("_")
 order = list_sev[1:] + [list_sev[0]]
 
 df_gene_diffexp_sorted = make_dataframe_stat_test_rna(df_rna_count_meta, list_targeted_gene)
-df_gene_diffexp_sorted_melted = save_stat_test_result(df_gene_diffexp_sorted, outdir, "SupplementaryTable5.txt", omics="rna")
+df_gene_diffexp_sorted_melted = save_stat_test_result_rna(df_gene_diffexp_sorted, outdir, "SupplementaryTable5.txt")
 dict_gene_pvalsig = get_dictionary_gene_pvalsig(df_gene_diffexp_sorted)
 
 # %%
@@ -112,7 +112,7 @@ for i, (gene, ax) in enumerate(zip(list_targeted_gene, axes)):
     ax.set_axisbelow(True)
 
 plt.subplots_adjust(hspace=0.3, wspace=0.3, left=0.1, right=0.9)
-plt.savefig("/BiO/Access/kyungwhan1998/Infectomics/Results/InfectomicsPaper1/20240906/SupplementaryFigure5.png", bbox_inches="tight", dpi=600)
+plt.savefig("/BiO/Access/kyungwhan1998/Infectomics/Results/InfectomicsPaper1/20240906/SupplementaryFigure5.pdf", bbox_inches="tight", dpi=300)
 plt.show()
 plt.close()
 

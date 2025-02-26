@@ -80,22 +80,26 @@ class Parse():
             
         return df_crf_filtered
 
-    def select_dataframe(self, num=2):
-        df_crf_select = self.df_crf.iloc[:, num:]
+    def select_dataframe(self, col_start="Sample_ID", col_excl="NA"):
+        list_cols_init = list(self.df_crf.columns)
+        ind_start = list_cols_init.index(col_start)
+        list_cols_start = list_cols_init[ind_start:]
+        list_cols_select = list(filter(lambda x: x != col_excl, list_cols_start))
+        df_crf_select = self.df_crf.loc[:, list_cols_select]
 
         return df_crf_select
 
     def change_severity_class_to_group(self, sev_class):
         sev_class = int(sev_class)
         if sev_class == 1 or sev_class == 2:
-            sev_group = "mild"
+            sev_group = "Mild"
 
         else:
-            sev_group = "severe"
+            sev_group = "Severe"
         
         return sev_group
 
-    def add_info_severity_dataframe(self, target="Severity"):
+    def add_info_severity_dataframe(self, target="Severity_group"):
         self.df_crf[target] = self.df_crf["중증도분류"].apply(self.change_severity_class_to_group)
         for sampleid in self.df_crf.iloc[:, 0]:
             if str(sampleid).split("-")[1][0] == "R":
@@ -105,22 +109,11 @@ class Parse():
 
         return df_crf_add_sev
     
-    def extract_important_columns_dataframe(self, target="Severity"):
+    def extract_important_columns_dataframe(self):
         list_new_colnames = self.rename_column_names()
         list_english_cols = list(filter(lambda x: re.search("[a-zA-Z\s]+", x[0]) is not None, list_new_colnames)) 
         list_english_cols = list(filter(lambda x: re.search("[a-zA-Z\s]+", x[-1]) is not None, list_english_cols))  
-        list_extract_cols = list()
-        len_cols = len(list_english_cols)
-        for i in range(len_cols):
-            colname = list_english_cols[i]
-            content = self.df_crf[colname].loc[0]
-            type_content = type(content)
-            if type_content == np.float64 or colname==target:
-                list_extract_cols.append(colname)
-            else:
-                continue
-
-        df_crf_ext = self.df_crf[["SampleID"] + list_extract_cols]
+        df_crf_ext = self.df_crf[list_english_cols]
         
         return df_crf_ext
     
@@ -140,7 +133,7 @@ class Parse():
 
         return dict_sample_phase
     
-    def get_clinical_assoc_severity(self, df_crf, target="Severity"):
+    def get_clinical_assoc_severity(self, df_crf, target="Severity_group", colsample="Sample_ID"):
         list_df_compare = list()
         list_columns = list(df_crf.columns)
         df_crf_selec = df_crf.copy()
@@ -155,7 +148,7 @@ class Parse():
             if is_numeric:
                 try:
                     df_crf_selec[colname] = df_crf_selec[colname].apply(float)
-                    df_compare = df_crf_selec[[target, "SampleID", colname]].dropna()
+                    df_compare = df_crf_selec[[target, colsample, colname]].dropna()
                     list_df_compare.append(df_compare)
                 
                 except Exception as e:
@@ -279,7 +272,7 @@ class Stats():
     
     def __init__(self, df_compare, outdir):
         self.df_compare = df_compare 
-        self.target = "Severity"
+        self.target = "Severity_group"
         self.outdir = outdir
     
     def get_series_values_per_severity(self):
@@ -364,7 +357,7 @@ class Plot():
         self.dict_palette = dict_palette
         self.outdir = outdir
         self.ax = ax
-        self.target = "Severity"
+        self.target = "Severity_group"
 
     def get_sample_size_group(self, df_compare):
         list_target = df_compare[self.target].to_list()

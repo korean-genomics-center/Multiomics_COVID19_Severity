@@ -224,3 +224,4 @@ def main(path_sev_info, dir_methylcpgmin, infilenamehyper, infilenamehypo):
     df_beta_all_hypo = get_dataframe_methylation_beta_samples(path_sev_info, infilenamehypo, list_methyl_sample)
 
     return df_beta_all_hyper, df_beta_all_hypo
+#%%
