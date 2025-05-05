@@ -1,12 +1,16 @@
 # %%
 import os
-import pandas as pd
 from pathlib import Path
-import seaborn as sns
-import numpy as np
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-from matplotlib import gridspec
-from statannotations.Annotator import Annotator
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from methylation_severity import (get_dict_deg_dmp_overlap_markers,
+                                  get_dict_palette, get_dict_pos,
+                                  get_drop_samples, get_xticklabels, main,
+                                  make_dataframe_stat_test)
+from statannot import add_stat_annotation
 
 # %%
 WORKDIR = str(Path(__file__).parents[3])
@@ -18,156 +22,122 @@ file_deg_dmp_overlap = f"{WORKDIR}/Results/11_dmp/Yes_LOO/Covariate_Sex_Age/Meth
 path_drop_samples = f"{WORKDIR}/Resources/Scripts/Final/list_remove_samples.txt"
 outdir = f"{WORKDIR}/Results/Paper"
 os.makedirs(outdir, exist_ok=True)
-path_methyl_target = f"{WORKDIR}/Results/11_dmp/Yes_LOO/Covariate_Sex_Age/list_new_methyl_markers.txt"
-
+list_drop_samples = get_drop_samples(path_drop_samples)
 
 # %%
-from methylation_severity import (get_dict_deg_dmp_overlap_markers,
-                                  main,
-                                  make_dataframe_normality_test,
-                                  make_dataframe_stat_test,
-                                  save_norm_test_result, 
-                                  save_stat_test_result,
-                                  plot_methyl_difference)
+
+list_excl_methyl = ["chr2:102143316", "chr5:75320838", "chr6:108562564", "chr15:90100633", "chr20:654151"] + ["chr6:36697843"]
 
 df_beta_all_hyper, df_beta_all_hypo = main(path_sev_info, dir_methylcpgmin, infilenamehyper, infilenamehypo)
-list_metainfo = list(df_beta_all_hyper.iloc[:, -8:].columns)
-list_marker_hyper = list(filter(lambda x: x not in list_metainfo, list(df_beta_all_hyper.columns)))
-df_beta_all_hyper_hypo = pd.concat([df_beta_all_hyper[list_marker_hyper], df_beta_all_hypo], axis=1)
 dict_markers_overlap = get_dict_deg_dmp_overlap_markers(file_deg_dmp_overlap)
-
 marker_overlap_hyper = list(set(dict_markers_overlap.keys()).intersection(set(list(df_beta_all_hyper.columns))))
 marker_overlap_hypo = list(set(dict_markers_overlap.keys()).intersection(set(list(df_beta_all_hypo.columns))))
+dict_markers_hyper = {k: v for k, v in dict_markers_overlap.items() if k in marker_overlap_hyper}
+dict_markers_hypo = {k: v for k, v in dict_markers_overlap.items() if k in marker_overlap_hypo}
+list_markers_hyper = list(set(dict_markers_hyper.keys()))
+list_markers_hypo = list(set(dict_markers_hypo.keys()))
+df_beta_selec_hyper = df_beta_all_hyper[list_markers_hyper]
+df_beta_selec_hypo = df_beta_all_hypo[list_markers_hypo] 
+list_metainfo = list(df_beta_all_hyper.iloc[:, -8:].columns)
+df_metainfo = df_beta_all_hyper[list_metainfo]
+df_beta_selec_all = pd.concat([df_beta_selec_hyper, df_beta_selec_hypo, df_metainfo], axis=1)
 
-with open(path_methyl_target, mode="r") as fr:
-    list_target_methyl = list(map(lambda x: x.rstrip(), fr.readlines()))
-
-with open(path_drop_samples, mode="r") as fr:
-    list_drop_samples = list(map(lambda x: x.rstrip(), fr.readlines()))
-
+list_target_methyl = list_markers_hyper + list_markers_hypo
+list_target_methyl = sorted(list_target_methyl, key=lambda x: int(x.split(":")[0].replace("chr", "")))
 dict_marker_target = dict()
 for marker, markers in dict_markers_overlap.items():
     if marker in list_target_methyl:
         target = "-".join([x.split("_")[-1] for x in markers])
         dict_marker_target[marker] = target
-     
-df_beta_selec_target = df_beta_all_hyper_hypo[list_target_methyl + list_metainfo]
 
-# Paths to the marker lists
-path_hypo = "/BiO/Access/kyungwhan1998/Infectomics/Results/11_dmp/Yes_LOO/Covariate_Sex_Age/list_new_methyl_markers_hypo.txt"
-path_hyper = "/BiO/Access/kyungwhan1998/Infectomics/Results/11_dmp/Yes_LOO/Covariate_Sex_Age/list_new_methyl_markers_hyper.txt"
+list_id = list(df_beta_selec_all.index)
+list_id = list(set(list_id).difference(set(list_drop_samples)))
+df_beta_selec_target = df_beta_selec_all.loc[list_id, :]
+df_methyl_stat = make_dataframe_stat_test(df_beta_selec_target, list_target_methyl)
 
-# Get marker list
-def get_list_marker(path_marker):
-    with open(path_marker, mode="r") as fr:
-        list_marker = list(map(lambda x: x.rstrip("\n"), fr.readlines()))
-    return list_marker
+# %%
+plt.rcParams["font.size"] = 10
+colsev = "Severity_visit"
+colsample = "Sample_ID"
+nrows = 5
+ncols = int(np.ceil(len(list_target_methyl) / nrows))
+fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(3*ncols, 6*nrows))
+axes = axes.flatten()
 
-# Load hypo and hyper markers
-list_marker_hypo = get_list_marker(path_hypo)
-list_marker_hyper = get_list_marker(path_hyper)
+dict_pos = get_dict_pos(df_beta_selec_target, list_pos=[0, 1, 2, 3, 4, 5])
+dict_palette = get_dict_palette(df_beta_selec_target)
 
-# Filter the dataframe based on severity
-def get_filtered_data(severity, list_marker):
-    df_filtered = df_beta_selec_target[ 
-        (df_beta_selec_target["Severity"] == int(severity)) & 
-        (df_beta_selec_target["Visit"] != "Convalescent")
-    ]
-    return df_filtered[["Subject_ID", "Visit", "Severity"] + list_marker]
+categories = list(dict_pos.keys())
+positions = list(dict_pos.values())
+colors = [dict_palette[cat] for cat in categories]
+order = ['Healthy','Mild_First','Severe_First','Mild_Last','Severe_Last','Convalescent']
 
-# Create figure with gridspec
-fig = plt.figure(figsize=(12, 6))
-# Adjusting the height_ratios to make A and C larger
-gs = gridspec.GridSpec(2, 2, figure=fig, width_ratios=[1.3, 1], height_ratios=[1, 1], wspace=0.3, hspace=0.5)
+for i, (marker, ax) in enumerate(zip(list_target_methyl, axes)):
+    df_beta_selec_target_copy = df_beta_selec_target.copy()
+    df_methyl_stat_copy = df_methyl_stat.copy()
+    plot_data = {cat: [] for cat in categories}
+    
+    for category in categories:
+        values = df_beta_selec_target_copy[df_beta_selec_target_copy[colsev] == category][marker].dropna().values
+        plot_data[category] = values
 
-# Conditions for subplots (Severity, Marker type)
-conditions = [
-    ("3", list_marker_hypo, "A", -0.1),
-    ("4", list_marker_hypo, "B", -0.13),
-    ("3", list_marker_hyper, "C", -0.1),
-    ("4", list_marker_hyper, "D", -0.13)
-]
+    g = sns.boxplot(data=df_beta_selec_target_copy, x=colsev, y=marker, order=order, palette=colors, ax=ax, fliersize=0, width=0.3, zorder=2)
+    
+    g.set(xlabel=None) 
+    for category, color in zip(categories, colors):
+        x = np.full_like(plot_data[category], dict_pos[category], dtype=float)
+        ax.scatter(x, plot_data[category], color=color, edgecolor='black', label=category, alpha=0.5, s=30, zorder=3)
+    
+    box_pairs = df_methyl_stat_copy.loc[marker, "comp"]
+    list_idx_selec = [idx for idx, x in zip(range(len(box_pairs)), box_pairs) if x[0].split("_")[-1]==x[1].split("_")[-1] or x[0] == "Healthy"]
+    box_pairs_selec = [box_pairs[idx] for idx in list_idx_selec]
+    pvalues = df_methyl_stat_copy.loc[marker, "pval"]
+    pvalues_selec = [pvalues[idx] for idx in list_idx_selec]
+    
+    add_stat_annotation(ax, 
+                        data=df_beta_selec_target_copy, 
+                        x=colsev,
+                        y=marker,
+                        order=order,
+                        box_pairs=box_pairs_selec,
+                        perform_stat_test=False,
+                        pvalues=pvalues_selec,
+                        text_offset=-0.1,
+                        line_offset=0.05,
+                        text_format='star',
+                        fontsize=plt.rcParams["font.size"]+4,
+                        loc='inside', 
+                        verbose=0)
+    
+    ax.set_xlabel("")
+    ax.spines[['right', 'top']].set_visible(False)
+    ax.set_xticks(positions)
+    list_xticklabels = get_xticklabels(df_beta_selec_target, dict_name_vis={"First": " (Acute)", "Last": " (Recovery)"}, colsample=colsample)
 
-# Loop through conditions and create plots
-for i, (severity, markers, label, label_xpos) in enumerate(conditions):
-    # Get grid position for the current subplot grid (2x2 grid)
-    ax = fig.add_subplot(gs[i])
+    if (i // ncols) == (nrows - 1):
+        ax.set_xticklabels(list_xticklabels, fontsize=plt.rcParams["font.size"]+2, rotation=45, ha="right", rotation_mode="anchor")
+    else:
+        ax.set_xticklabels([], fontsize=0, rotation=45, ha="right", rotation_mode="anchor")
+    
+    ax.tick_params(axis='y', labelsize=plt.rcParams["font.size"]+2)
+    
+    if i % ncols == 0:
+        ax.set_ylabel("Proportion of\nMethylated CpGs (%)", fontsize=plt.rcParams["font.size"]+4)
+    else:
+        ax.set_ylabel("", fontsize=0)
+    markername = f"{marker}\n$\it({dict_marker_target.get(marker, marker)})$\n"
+    ax.set_title(markername, fontsize=plt.rcParams["font.size"]+5)
 
-    # Remove x and y axis for the overall grid section (A, B, C, D)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.axis('off')
+    for j in range(len(list_target_methyl), len(axes)):
+        axes[j].axis('off')
+    
+    ax.grid(axis="y")
+    ax.set_axisbelow(True)
 
-    # Adjust the label positioning (move the label a bit to the left to avoid overlap)
-    ax.text(label_xpos, 1.08, label, transform=ax.transAxes, fontsize=16, weight="bold", va='top', ha='right')
-
-    df_filtered = get_filtered_data(severity, markers)
-
-    # Subjects with paired visits
-    subjects = df_filtered["Subject_ID"].value_counts()
-    paired_subjects = subjects[subjects > 1].index.tolist()
-
-    # Number of rows and columns in the current grid for subjects
-    n_subjects = len(paired_subjects)
-    nrows = 1  # Number of rows (adjust if necessary)
-    ncols = int(np.ceil(n_subjects / nrows))  # Number of columns
-
-    # Create a subplot for each subject within the subgridspec
-    subgs = gs[i].subgridspec(nrows, ncols, hspace=1.5, wspace=0.3)  # Increase hspace for more vertical spacing
-
-    for j, subject_id in enumerate(paired_subjects):
-        # Create a new subplot for each subject within the subgridspec
-        ax_subject = fig.add_subplot(subgs[j])
-
-        # Filter data for the current subject
-        df_subject = df_filtered[df_filtered["Subject_ID"] == subject_id]
-
-        # Prepare melt data for plotting
-        df_melt = df_subject[["Visit"] + markers].set_index("Visit").T.reset_index()
-        df_melt.columns.name = None
-        df_melt = df_melt.rename(columns={"index": "Genomic_Pos"})
-        df_melt = df_melt.melt(id_vars="Genomic_Pos", var_name="Visit", value_name="Methyl")
-        palette = {"First": "#F4A7B9", "Last": "#ADD8E6"}
-        # Plot boxplot with light grey color and turn off outlier dots
-        sns.boxplot(data=df_melt, x="Visit", y="Methyl", ax=ax_subject, width=0.4, showfliers=False, color='lightgrey', zorder=2, palette=palette)
-
-        # Add scatter plot with white facecolor and black edgecolor, with narrower edge
-        sns.stripplot(data=df_melt, x="Visit", y="Methyl", ax=ax_subject, color='white', marker='o', size=4, facecolor=None, edgecolor='black', linewidth=0.5, jitter=False, alpha=0.6, zorder=2, palette=palette, label=None)
-
-        # Add the missing lineplot
-        sns.lineplot(data=df_melt, x="Visit", y="Methyl", estimator=None, units="Genomic_Pos", color="grey", alpha=0.6, linewidth=0.7, ax=ax_subject, zorder=2, palette=palette, label=None)
-
-        # Add annotation
-        pairs = [("First", "Last")]
-        annotator = Annotator(ax_subject, pairs, data=df_melt, x="Visit", y="Methyl")
-        annotator.configure(test='t-test_paired', text_format='star', loc='inside', verbose=0)
-        annotator.apply_and_annotate()
-
-        # Set the title for the subplot (subject label)
-        ax_subject.set_title(subject_id, fontsize=10, weight="bold")
-
-        # Add grid on the y-axis
-        ax_subject.yaxis.grid(True)
-
-        # Rotate xticks for better readability
-        ax_subject.set_xticklabels(["Acute", "Recovery"], rotation=45, ha='right', rotation_mode="anchor")
-        ax_subject.set_xlabel("", fontsize=0)
-        
-        # Set y-tick labels and ylabel only on the first subplot of each grid (A, C)
-        if j == 0:  # First subplot in the subgrid (A or C)
-            ax_subject.set_ylabel("Methylation (%)", fontsize=10)
-            ax_subject.set_ylim(-1, 109)
-        else:  # No y-tick labels for other subplots
-            ax_subject.set_ylabel("", fontsize=0)
-            ax_subject.set_yticklabels([])
-
-# Adjust layout and remove unused axes
-plt.tight_layout()  # Adjust padding between subplots
-plt.subplots_adjust()  # Make room at the top and bottom if necessary
-plt.savefig(os.path.join(outdir, "SupplementaryFigure6.png"), dpi=300)
-plt.savefig(os.path.join(outdir, "SupplementaryFigure6.pdf"), dpi=300)
+plt.subplots_adjust(hspace=0.4, wspace=0.5, left=0.1, right=0.9)
+plt.savefig(f"{WORKDIR}/Results/Paper/SupplementaryFigure6.pdf", bbox_inches="tight", dpi=300)
+plt.savefig(f"{WORKDIR}/Results/Paper/SupplementaryFigure6.png", bbox_inches="tight", dpi=300)
 plt.show()
 plt.close()
+
 # %%

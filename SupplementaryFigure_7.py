@@ -109,7 +109,7 @@ for i, (gene, ax) in enumerate(zip(list_targeted_gene, axes)):
     ax.set_axisbelow(True)
 
 plt.subplots_adjust(hspace=0.2, wspace=0.6, left=0.1, right=0.9)
-plt.savefig(f"{outdir}/SupplementaryFigure5.png", bbox_inches="tight", dpi=300)
-plt.savefig(f"{outdir}/SupplementaryFigure5.pdf", bbox_inches="tight", dpi=300)
+plt.savefig(f"{outdir}/SupplementaryFigure7.png", bbox_inches="tight", dpi=300)
+plt.savefig(f"{outdir}/SupplementaryFigure7.pdf", bbox_inches="tight", dpi=300)
 plt.show()
 plt.close()
