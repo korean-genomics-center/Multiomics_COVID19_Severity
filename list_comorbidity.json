@@ -1,0 +1,11 @@
+{
+    "hypertension": ["HTN", "고혈압"],
+    "dyslipidemia": ["Dyslipidemia", "고지혈증"],
+    "diabetes_mellitus": ["diabetes_mellitus", "당뇨"],
+    "anemia": ["anemia", "anaemia", "빈혈"],
+    "liver_disease": ["간", "liver"],
+    "thyroid_disease": ["갑상선", "thyroid"],
+    "cancer": ["암", "cancer", "carcinoma", "neoplasm"],
+    "asthma": ["천식", "asthma"],
+    "thrombocytopenia": ["thrombocytopenia"]
+}
