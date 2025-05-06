@@ -22,7 +22,6 @@ clinical.py
 math_trick.py  
 
 ## input files
-get_severity_samples.py  
 list_comorbidity.json  
 list_remove_samples.txt  
 list_variable_name_change.json  
