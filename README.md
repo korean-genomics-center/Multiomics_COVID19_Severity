@@ -1,6 +1,8 @@
 # Multiomics_COVID19_Severity
 ![image](https://github.com/user-attachments/assets/5dc1a8ec-392f-4cfb-85bd-2cc75086e96f)
 
+Identification of reactive CpGs and RNA expression in early COVID-19 through cis-eQTM analysis reflecting disease severity and recovery (Ryu et al., 2025, In Submission)
+
 ## main (in order)
 1. make_metatable_incl_clinical_info_for_dmp_analysis.py  
 2. find_methyl_correlated_gene.py  
