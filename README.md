@@ -11,7 +11,7 @@ find_common_rna_markers_LOO.py
 get_list_new_markers_final.py  
 parse_cell_type_deconv_result.py  
 concat_expression_data.py  
-normalize_external_expression_data.R  
+normalize_expression_data.R  
 
 ## source 
 methylation_severity.py  
@@ -28,12 +28,13 @@ list_remove_samples.txt
 list_variable_name_change.json  
 
 ## figures
-Figure_1.py  
+Figure_1.R  
 Figure_2.py  
 Figure_3.py  
 SupplementaryFigure_1.py  
 SupplementaryFigure_3.py  
 SupplementaryFigure_4.py  
+SupplementaryFigure_5.py  
 SupplementaryFigure_6.py  
 SupplementaryFigure_7.py  
 SupplementaryFigure_8.py  
