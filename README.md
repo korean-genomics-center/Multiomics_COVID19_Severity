@@ -10,7 +10,7 @@
 6. find_common_rna_markers_LOO.py  
 7. get_list_new_markers_final.py  
 
-## accessory (in order)
+## accessory
 parse_cell_type_deconv_result.py  
 concat_expression_data.py  
 normalize_expression_data.R  
